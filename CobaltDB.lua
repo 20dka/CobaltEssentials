@@ -60,8 +60,15 @@ function initDB(path, cpath, dbpath, config)
 end
 ----------------------------------------------------------MUTATORS---------------------------------------------------------
 
+local function sendto(data, addr, port)
+	connector:setpeername(addr, port)
+	connector:send(data)
+	connector:setpeername('*')
+end
+
 function openDatabase(DBname)
-	local jsonPath = dbpath .. DBname .. ".json"
+	DBname = DBname:gsub('\\','/')
+	local jsonPath = dbpath ..'/'.. DBname .. ".json"
 
 	local jsonFile, error = io.open(jsonPath,"r")
 	--CElog(jsonFile, error)
@@ -71,20 +78,23 @@ function openDatabase(DBname)
 	if jsonFile == nil then
 		databaseLoaderInfo = "new"
 		CElog("JSON file does not exist, creating a new one.","CobaltDB")
-		--CElog(jsonFile, error)
 		jsonFile, error = io.open(jsonPath, "w")
-		local openAttempts = 1
+
 		if error then
-			os.execute("mkdir " .. dbpath:gsub("/","\\") .. "\\playersDB")
-			--while error and openAttempts < 5 do
+			s = DBname:find('/')
+			if s then
+				CElog("Parent directory does not exist, creating a new one.","CobaltDB")
+				DBfolder = DBname:sub(1,s-1)
+
+				--print(dbpath .. DBfolder)
+				utils.createDirectory(dbpath .. DBfolder)
 				jsonFile, error = io.open(jsonPath, "w")
-				--openAttempts = openAttempts + 1
-			--end
+				if error then
+					CElog("that still didnt work, im giving up lmao.\n"..jsonPath.." should be accessible","CobaltDB")
+					return
+				end
+			end
 		end
-		--if error then
-			--connector:sendto("E:" .. error ,"127.0.0.1", CobaltDBport)
-			--return false
-		--end
 
 		jsonFile:write("{}")
 		jsonFile:close()
@@ -100,7 +110,7 @@ function openDatabase(DBname)
 		jsonFile:close()
 	end
 
-	connector:sendto(databaseLoaderInfo ,"127.0.0.1", CobaltDBport)
+	sendto(databaseLoaderInfo, "127.0.0.1", CobaltDBport)
 end
 
 function closeDatabase(DBname)
@@ -112,7 +122,7 @@ end
 
 function setCobaltDBport(port)
 	CobaltDBport = tonumber(port)
-	connector:sendto(CobaltDBport ,"127.0.0.1", CobaltDBport)
+	sendto(CobaltDBport ,"127.0.0.1", CobaltDBport)
 end
 
 --saves the table's changes to a file
@@ -181,7 +191,7 @@ function query(DBname, tableName, key)
 		end
 	end
 
-	connector:sendto(data ,"127.0.0.1", CobaltDBport)
+	sendto(data ,"127.0.0.1", CobaltDBport)
 end
 
 --returns a read-only version of the table as json.
@@ -202,7 +212,7 @@ function getTable(DBname, tableName)
 	end
 
 
-	connector:sendto(data ,"127.0.0.1", CobaltDBport)
+	sendto(data ,"127.0.0.1", CobaltDBport)
 end
 
 --returns a read-only list of all table names within the database
@@ -214,7 +224,7 @@ function getTables(DBname)
 	
 	data = json.stringify(data)
 
-	connector:sendto(data ,"127.0.0.1", CobaltDBport)
+	sendto(data ,"127.0.0.1", CobaltDBport)
 end
 
 function getKeys(DBname, tableName)
@@ -225,7 +235,7 @@ function getKeys(DBname, tableName)
 	
 	data = json.stringify(data)
 
-	connector:sendto(data ,"127.0.0.1", CobaltDBport)
+	sendto(data ,"127.0.0.1", CobaltDBport)
 end
 
 function tableExists(DBname, tableName)
@@ -235,7 +245,7 @@ function tableExists(DBname, tableName)
 		data = tableName
 	end
 
-	connector:sendto(data ,"127.0.0.1", CobaltDBport)
+	sendto(data ,"127.0.0.1", CobaltDBport)
 end
 
 

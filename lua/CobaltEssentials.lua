@@ -66,7 +66,7 @@ function onTick()
 		end
 	end
 
-	if extensions.triggerEvent("onTick", age) == false then
+	if extensions and extensions.triggerEvent("onTick", age) == false then
 		return -1
 	end
 

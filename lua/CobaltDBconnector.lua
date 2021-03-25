@@ -11,7 +11,7 @@
 ------------------------------------------------------------INIT-----------------------------------------------------------
 local M = {}
 
-local dbPath = resources .. "/server/" .. pluginName .. "/CobaltDB/"
+local dbPath = pluginPath .. "/CobaltDB/"
 local cobaltSysChar = string.char(0x99, 0x99, 0x99, 0x99)
 
 TriggerLocalEvent("initDB", package.path, package.cpath, dbPath, json.stringify(config))
@@ -22,10 +22,9 @@ local server = socket.udp()
 server:settimeout(3)
 
 local function init(configPort)
-
 	port = configPort
 	server:setsockname('0.0.0.0', tonumber(port))
-
+	return true
 end
 
 
@@ -113,7 +112,8 @@ tableTemplate.metatable =
 local function newDatabase(DBname)
 	TriggerLocalEvent("openDatabase", DBname)
 	
-	databaseLoaderInfo = server:receive()
+	databaseLoaderInfo, err = server:receive()
+	--print(databaseLoaderInfo)
 	if databaseLoaderInfo ~= nil then
 		if databaseLoaderInfo:sub(1,2) == "E:" then
 			CElog(DBname .. " could not be opened after 5 tries due to: " .. databaseLoaderInfo:sub(3),"CobaltDB")
@@ -135,6 +135,7 @@ local function newDatabase(DBname)
 			return newDatabase, databaseLoaderInfo
 		end
 	else
+		print("no response from db")
 		return nil, "No response from CobaltDB"
 	end
 end

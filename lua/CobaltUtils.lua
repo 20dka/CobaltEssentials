@@ -125,11 +125,15 @@ local function exists(file)
 end
 
 local function createDirectory(path)
-	os.execute("mkdir " .. dbpath:gsub("/","\\"))
+	if os.getenv('HOME') then
+		os.execute("mkdir " .. path:gsub("\\","/"))
+	else
+		os.execute("mkdir " .. path:gsub("/","\\"))
+	end
 end
 
 local function copyFile(path_src, path_dst)
-	local ltn12 = require("Resources/server/CobaltEssentials/socket/lua/ltn12")
+	local ltn12 = require(pluginPath.."/socket/lua/ltn12")
 
 	ltn12.pump.all(
 		ltn12.source.file(assert(io.open(path_src, "rb"))),
@@ -170,7 +174,6 @@ end
 
 --read a .cfg file and return a table containing it's files
 local function readCfg(path)
-
 	local cfg = {}
 	
 	local n = 1
@@ -245,6 +248,7 @@ function formatTime(time)
 	return  time ..":".. seconds .. ":" .. milliseconds
 end
 
+M.createDirectory = createDirectory
 M.copyFile = copyFile
 M.exists = exists
 M.parseVehData = parseVehData

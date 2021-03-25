@@ -7,50 +7,39 @@ RegisterEvent("onCobaltDBhandshake","onCobaltDBhandshake") --to make sure cobalt
 
 cobaltVersion = "1.5.3A"
 
-pluginName = debug.getinfo(1).source:sub(2)
-local s,e
-
-resources = debug.getinfo(1).source:sub(2)
-
-local s, e = resources:find("\\")
-resources = resources:sub(0,e-1)
-local s, e = resources:find("Server")
-resources = resources:sub(1,s-2)
-
-s, e = pluginName:find("\\")
-pluginName = pluginName:sub(s+1)
-s, e = pluginName:find("\\")
-pluginName = pluginName:sub(1,s-1)
+pluginPath = debug.getinfo(1).source:gsub("\\","/")
+pluginPath = pluginPath:sub(2,(pluginPath:find("CobaltEssentialsLoader.lua"))-2)
 
 
-package.path = package.path .. ";;" .. resources .. "/Server/" .. pluginName .. "/?.lua;;".. resources .. "/Server/" .. pluginName .. "/lua/?.lua"
-package.cpath = package.cpath .. ";;" .. resources .. "/Server/" .. pluginName .. "/?.dll;;" .. resources .. "/Server/" .. pluginName .. "/lib/?.dll"
+package.path = package.path .. ";;" .. pluginPath .. "/?.lua;;".. pluginPath .. "/lua/?.lua"
+package.cpath = package.cpath .. ";;" .. pluginPath .. "/?.so;;" .. pluginPath .. "/lib/?.so"
 
 
---local neededFiles = {"lua/socket.lua","lua/mime.lua","lua/ltn12.lua","socket/core.dll","mime/core.dll"}
 utils = require("CobaltUtils")
 print("\n\n")
 CElog(color(107,94) .. "-------------Loading Cobalt Essentials v" .. cobaltVersion .. "-------------")
-	CE = require("CobaltEssentials")
+CE = require("CobaltEssentials")
 
-	CElog("Utils Loaded")
+CElog("Utils Loaded")
 
+
+CC = require("CobaltCommands")
 	CElog("Loading CobaltCommands")
-		CC = require("CobaltCommands")
 
-	--TODO: WRITE A WAY TO LOAD THESE CONFIG OPTIONS AS AN OVERRIDE TO MAKE SERVER UPDATES/PORTS EASIER?
-	--CobaltConfigOld = require("CobaltConfig")
-		--print("CobaltConfig Loaded")
+json = require("json")
+	CElog("json Lib Loaded")
 
-	json = require("json")
-		CElog("json Lib Loaded")
-
-	CobaltDB = require("CobaltDBconnector")
-		CElog("CobaltDB Connector Loaded")
+--CobaltDB = require("RemoteDBconnector")
+CobaltDB = require("CobaltDBconnector")
+	CElog("CobaltDB Connector Loaded")
 
 --FOR WHEN COBALTDB REPORTS BACK
 function onCobaltDBhandshake(port)
-	CobaltDB.init(port)
+
+	if not CobaltDB.init(port) then
+		CE.stopServer()
+	end
+	
 
 	players = require("CobaltPlayerMngr")
 		CElog("Cobalt Player Manager Loaded")
@@ -64,7 +53,7 @@ function onCobaltDBhandshake(port)
 
 
 	--See if CobaltConfig needs to be loaded for compatability
-	if utils.exists(resources .. "/Server/" .. pluginName .. "/lua/CobaltConfig.lua") then
+	if utils.exists(pluginPath .. "/lua/CobaltConfig.lua") then
 		CobaltCompat = require("CobaltCompat")
 	end
 
@@ -74,7 +63,7 @@ function onCobaltDBhandshake(port)
 	end
 	
 	--WARNING for not having enough players in the config.
-	if beamMPconfig.MaxPlayers < config.maxActivePlayers.value then
+	if beamMPconfig.MaxPlayers > config.maxActivePlayers.value then
 		CElog("/!\\ ---THE SERVER'S MAX PLAYER COUNT IS GREATER THAN THE MAX ACTIVE PLAYERS IN THE COBALT CONFIG--- /!\\","WARN")
 		--Sleep(2000)
 	end
@@ -93,7 +82,7 @@ function onCobaltDBhandshake(port)
 		CElog("		If you do not turn it up, dynamic vehicle caps based on permission level will not work!","WARN")
 		CElog("		Please adjust the serverside vehicle cap to " .. highestCap .. " or greater to avoid any problems.","WARN")
 		CElog("/!\\ -------------------------------SERVERSIDE-VEHICLE-CAP-FOR-CARS-TOO-LOW------------------------------- /!\\","WARN")
-		beamMPcfg.Cars = highestCap
+		beamMPconfig.Cars = highestCap
 		--Sleep(5000)
 	end
 end

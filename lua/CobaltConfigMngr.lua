@@ -16,7 +16,7 @@ config = CobaltDB.new("config")
 
 beamMPconfig = {}
 local currentcfg = {}
-local beamMPcfg = utils.readCfg("server.cfg")
+local beamMPcfg = utils.readCfg("Server.cfg")
 
 
 --for key,value in pairs(beamMPcfg) do
