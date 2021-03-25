@@ -132,13 +132,12 @@ local function createDirectory(path)
 	end
 end
 
-local function copyFile(path_src, path_dst)
-	local ltn12 = require(pluginPath.."/socket/lua/ltn12")
-
-	ltn12.pump.all(
-		ltn12.source.file(assert(io.open(path_src, "rb"))),
-		ltn12.sink.file(assert(io.open(path_dst, "wb")))
-	)
+local function copyFile(src, dst)
+        if os.getenv('HOME') then
+                os.execute(string.format("cp %s %s",src:gsub('\\', '/'), dst:gsub('\\','/')))
+        else
+                os.execute(string.format("copy %s %s",src:gsub('/', '\\'), dst:gsub('/','\\')))
+        end
 end
 
 local function parseVehData(data)
@@ -174,6 +173,7 @@ end
 
 --read a .cfg file and return a table containing it's files
 local function readCfg(path)
+
 	local cfg = {}
 	
 	local n = 1
