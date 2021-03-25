@@ -12,6 +12,7 @@ pluginPath = pluginPath:sub(2,(pluginPath:find("CobaltEssentialsLoader.lua"))-2)
 
 
 package.path = package.path .. ";;" .. pluginPath .. "/?.lua;;".. pluginPath .. "/lua/?.lua"
+package.cpath = package.cpath .. ";;" .. pluginPath .. "/?.dll;;" .. pluginPath .. "/lib/?.dll"
 package.cpath = package.cpath .. ";;" .. pluginPath .. "/?.so;;" .. pluginPath .. "/lib/?.so"
 
 
