@@ -113,31 +113,69 @@ function output(ID, message)
 	end
 end
 
+-- https://stackoverflow.com/a/40195356/7137271
 local function exists(file)
-   local ok, err, code = os.rename(file, file)
-   if not ok then
-	  if code == 13 then
-		 -- Permission denied, but it exists
-		 return true
-	  end
-   end
-   return ok, err
+	local ok, err, code = os.rename(file, file)
+	if not ok then
+		if code == 13 then
+			-- Permission denied, but it exists
+			return true
+		end
+	end
+	return ok, err
+end
+
+local function isDir(path)
+	-- "/" works on both Unix and Windows
+	return exists(path.."/")
 end
 
 local function createDirectory(path)
-	if os.getenv('HOME') then
-		os.execute("mkdir " .. path:gsub("\\","/"))
+	path = path:gsub("\\","/")
+	if os.getenv('HOME') then -- scuffed Unix check until the beammp server has a global for it
+		os.execute("mkdir -p " .. path)
 	else
-		os.execute("mkdir " .. path:gsub("/","\\"))
+		os.execute('poweshell "mkdir ' .. path .. '"')
 	end
 end
 
 local function copyFile(src, dst)
-        if os.getenv('HOME') then
-                os.execute(string.format("cp %s %s",src:gsub('\\', '/'), dst:gsub('\\','/')))
-        else
-                os.execute(string.format("copy %s %s",src:gsub('/', '\\'), dst:gsub('/','\\')))
-        end
+	if os.getenv('HOME') then
+		os.execute(string.format("cp %s %s",src:gsub('\\', '/'), dst:gsub('\\','/')))
+	else
+		os.execute(string.format("copy %s %s",src:gsub('/', '\\'), dst:gsub('/','\\')))
+	end
+end
+
+local function getPathSplit(path)
+	local name, ext = string.match(path , "/*(%w+)(.%w+)$")
+	local dir = path:gsub('/'..name..ext, '')
+	return dir, name, ext
+end
+
+
+local function readJson(path)
+	local jsonFile, error = io.open(path,"r")
+	if error then return nil, error end
+
+	local jsonText = jsonFile:read("*a")
+	jsonFile:close()
+
+	return json.parse(jsonText), false
+end
+
+local function writeJson(path, data)
+	local dir, fname, ext = getPathSplit(path)
+
+	if not isDir(dir) then createDirectory(dir) end
+
+	local jsonFile, error = io.open(path,"w")
+	if error then return false end
+
+	jsonFile:write(json.stringify(data or {}))
+	jsonFile:close()
+
+	return true
 end
 
 local function parseVehData(data)
@@ -248,11 +286,15 @@ function formatTime(time)
 	return  time ..":".. seconds .. ":" .. milliseconds
 end
 
-M.createDirectory = createDirectory
 M.copyFile = copyFile
 M.exists = exists
-M.parseVehData = parseVehData
+M.isDir = isDir
+M.getPathSplit = getPathSplit
+M.createDirectory = createDirectory
 
+M.readJson = readJson
+M.writeJson = writeJson
 M.readCfg = readCfg
+M.parseVehData = parseVehData
 
 return M
