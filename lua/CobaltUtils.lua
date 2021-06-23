@@ -7,6 +7,9 @@ _G.RemoveVehicleV = _G.RemoveVehicle
 _G.GetPlayerVehiclesV = _G.GetPlayerVehicles
 _G.DropPlayerV = _G.DropPlayer
 
+toml = require("toml")
+
+
 -------------------------------------------------REPLACED-GLOBAL-FUNCTIONS-------------------------------------------------
 --Trigger the on VehicleDeleted event
 function RemoveVehicle(playerID, vehID)
@@ -211,52 +214,20 @@ end
 
 --read a .cfg file and return a table containing it's files
 local function readCfg(path)
+	local tomlFile, error = io.open(path, 'r')
+	if error then return nil, error end
 
-	local cfg = {}
-	
-	local n = 1
+	local tomlText = tomlFile:read("*a")
+	tomlFile:close()
 
-	local file = io.open(path,"r")
+	local cfg = toml.parse(tomlText)
 
-	local line = file:read("*l") --get first value for line
-	while line ~= nil do
-
-		--remove comments
-		local c = line:find("#")
-
-		if c ~= nil then
-			line = line:sub(1,c-1)
-		end
-
-		--see if this line even contians a value
-		local equalSignIndex = line:find("=")
-		if equalSignIndex ~= nil then
-			
-			local k = line:sub(1, equalSignIndex - 1)
-			k = k:gsub(" ", "") --remove spaces in the key, they aren't required and will serve to make thigns more confusing.
-
-			local v = line:sub(equalSignIndex + 1)
-
-			v = load("return " ..  v)()
-			
-			cfg[k] = v
-		end
-
-
-		--get next line ready
-		line = file:read("*line")
-	end
-
-	if cfg.Name then
-		cfg.rawName = cfg.Name
-		local s,e = cfg.Name:find("%^")
+	if cfg.General and cfg.General.Name then -- remove special chars from server name
+		cfg.General.rawName = cfg.General.Name
+		local s,e = cfg.General.Name:find("%^")
 		while s ~= nil do
-
-			if s ~= nil then
-				cfg.Name = cfg.Name:sub(0,s-1) .. cfg.Name:sub(s+2)
-			end
-		
-			s,e = cfg.Name:find("%^")
+			cfg.Name = cfg.General.Name:sub(0,s-1) .. cfg.General.Name:sub(s+2)
+			s,e = cfg.General.Name:find("%^")
 		end
 	end
 

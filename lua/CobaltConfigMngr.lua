@@ -16,7 +16,7 @@ config = CobaltDB.new("config")
 
 beamMPconfig = {}
 local currentcfg = {}
-local beamMPcfg = utils.readCfg("Server.cfg")
+local beamMPcfg = utils.readCfg("ServerConfig.toml").General -- use general section
 
 
 --for key,value in pairs(beamMPcfg) do
@@ -34,7 +34,7 @@ local beamMPconfigMetatable = {
 			Set(0, value)
 		elseif key == "Private" then
 			Set(1, value)
-		elseif key == "Cars" then
+		elseif key == "Cars" or key == "MaxCars" then
 			Set(2, value)
 		elseif key == "MaxPlayers" then
 			Set(3, value)

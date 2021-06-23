@@ -43,13 +43,14 @@ function initDB(path, cpath, dbpath, config)
 	utils = require("CobaltUtils")
 
 	config = json.parse(config)
-	
 
 	_G.dbpath = dbpath
 
 	local jsonFile, error = io.open(dbpath .."config.json")
+
 	if error == nil then
-		CobaltDBport = tonumber(json.parse(jsonFile:read("*a")).CobaltDBport.value)
+		local cfg = json.parse(jsonFile:read("*a"))
+		CobaltDBport = cfg.CobaltDBport.value or CobaltDBport
 		jsonFile:close()
 	end
 
@@ -68,7 +69,7 @@ end
 
 function openDatabase(DBname)
 	DBname = DBname:gsub('\\','/')
-	local jsonPath = dbpath ..'/'.. DBname .. ".json"
+	local jsonPath = dbpath .. DBname .. ".json"
 
 	local jsonFile, error = io.open(jsonPath,"r")
 	--CElog(jsonFile, error)
@@ -80,19 +81,21 @@ function openDatabase(DBname)
 		CElog("JSON file does not exist, creating a new one.","CobaltDB")
 		jsonFile, error = io.open(jsonPath, "w")
 
-		if error then
-			s = DBname:find('/')
-			if s then
-				CElog("Parent directory does not exist, creating a new one.","CobaltDB")
-				DBfolder = DBname:sub(1,s-1)
+		--print("json open error", error)
 
-				--print(dbpath .. DBfolder)
-				utils.createDirectory(dbpath .. DBfolder)
-				jsonFile, error = io.open(jsonPath, "w")
-				if error then
-					CElog("that still didnt work, im giving up lmao.\n"..jsonPath.." should be accessible","CobaltDB")
-					return
-				end
+
+		if error then
+			local s = DBname:find('/')
+
+			CElog("Parent directory does not exist, creating it.","CobaltDB")
+			DBfolder = s and DBname:sub(1,s-1) or ""
+
+			--print(dbpath .. DBfolder)
+			utils.createDirectory(dbpath .. DBfolder)
+			jsonFile, error = io.open(jsonPath, "w")
+			if error then
+				CElog("that still didnt work, im giving up lmao.\n"..jsonPath.." should be accessible","CobaltDB")
+				return
 			end
 		end
 
