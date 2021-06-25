@@ -43,9 +43,13 @@ CElog("CobaltEssentials Initiated")
 
 ----------------------------------------------------------EVENTS-----------------------------------------------------------
 
-function onTick()
+function onTick(t)
 
-	age = os.clock() * 1000
+	if isLinux() then
+		age = tonumber(t)
+	else
+		age = os.clock() * 1000 --os.clock is unreliable on linux
+	end
 
 	for k,v in pairs(delayedQueue) do
 		if k ~= "n" and v.complete == false and age >= v.execTime then

@@ -116,6 +116,10 @@ function output(ID, message)
 	end
 end
 
+function isLinux()
+	return package.config:sub(1,1) == '/'
+end
+
 -- https://stackoverflow.com/a/40195356/7137271
 local function exists(file)
 	local ok, err, code = os.rename(file, file)
@@ -135,15 +139,15 @@ end
 
 local function createDirectory(path)
 	path = path:gsub("\\","/")
-	if os.getenv('HOME') then -- scuffed Unix check until the beammp server has a global for it
+	if isLinux() then -- scuffed Unix check until the beammp server has a global for it
 		os.execute("mkdir -p " .. path)
 	else
-		os.execute('poweshell "mkdir ' .. path .. '"')
+		os.execute('powershell "mkdir ' .. path .. '"')
 	end
 end
 
 local function copyFile(src, dst)
-	if os.getenv('HOME') then
+	if isLinux() then
 		os.execute(string.format("cp %s %s",src:gsub('\\', '/'), dst:gsub('\\','/')))
 	else
 		os.execute(string.format("copy %s %s",src:gsub('/', '\\'), dst:gsub('/','\\')))
